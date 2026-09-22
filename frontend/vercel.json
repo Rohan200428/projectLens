@@ -1,5 +1,5 @@
 {
-  "outputDirectory": "dist/projectlens-frontend",
+  "outputDirectory": "dist/projectlens-frontend/browser",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
