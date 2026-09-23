@@ -979,6 +979,22 @@ a {
 }
 .login-card input {
   margin-top: 7px;
+  width: 100%;
+  border: 1px solid #dce4ec;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  padding: 11px 12px;
+  outline: 0;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.login-card input:focus {
+  border-color: #82b0f5;
+  box-shadow: 0 0 0 3px #e9f2ff;
 }
 .password-field {
   position: relative;
