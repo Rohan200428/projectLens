@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ElementRef } from "@angular/core";
+import { Component, OnInit, HostListener, ElementRef, ChangeDetectorRef } from "@angular/core";
 import { FormsModule, NgForm } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { HttpErrorResponse } from "@angular/common/http";
@@ -274,6 +274,7 @@ export class SubmissionFormComponent implements OnInit {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly elementRef: ElementRef,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   @HostListener("document:click", ["$event"])
@@ -351,11 +352,13 @@ export class SubmissionFormComponent implements OnInit {
       next: (response) => {
         console.log("CRITERIA RESPONSE:", response);
         this.criteria = response;
+        this.cdr.detectChanges();
       },
 
       error: (error) => {
         console.error("CRITERIA ERROR:", error);
         this.error = this.describeError(error);
+        this.cdr.detectChanges();
       },
     });
   }
@@ -382,11 +385,13 @@ export class SubmissionFormComponent implements OnInit {
           documentationLink: submission.documentationLink || "",
         };
         this.parseStackFromForm(submission.technologyStack);
+        this.cdr.detectChanges();
       },
 
       error: (error) => {
         console.error("SUBMISSION LOAD ERROR:", error);
         this.error = this.describeError(error);
+        this.cdr.detectChanges();
       },
     });
   }
@@ -433,6 +438,7 @@ export class SubmissionFormComponent implements OnInit {
 
         this.saving = false;
         this.error = this.describeError(error);
+        this.cdr.detectChanges();
       },
     });
   }
