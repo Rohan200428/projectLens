@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, NgZone } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
 import { Router } from '@angular/router';
@@ -67,7 +67,8 @@ export class LoginComponent {
 
   constructor(
     private readonly auth: AuthService,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly zone: NgZone
   ) {}
 
   submit(): void {
@@ -87,13 +88,13 @@ export class LoginComponent {
         }
         return throwError(() => err);
       }),
-      finalize(() => { this.loading = false; })
+      finalize(() => { this.zone.run(() => { this.loading = false; }); })
     ).subscribe({
       next: response => {
-        this.router.navigateByUrl('/dashboard');
+        this.zone.run(() => { this.router.navigateByUrl('/dashboard'); });
       },
       error: error => {
-        this.error = this.apiError(error, 'Unable to sign in. Check your credentials.');
+        this.zone.run(() => { this.error = this.apiError(error, 'Unable to sign in. Check your credentials.'); });
       }
     });
   }
