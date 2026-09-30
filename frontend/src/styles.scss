@@ -528,6 +528,119 @@ a {
 .field .field-error {
   color: var(--red);
 }
+.field-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+.char-counter {
+  font-size: 10px;
+  color: #8a98a7;
+  white-space: nowrap;
+}
+.char-counter.limit-near {
+  color: var(--amber);
+  font-weight: 700;
+}
+.stack-select {
+  min-height: 44px;
+  width: 100%;
+  border: 1px solid #dce4ec;
+  border-radius: 8px;
+  background: #fff;
+  padding: 7px 34px 7px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  box-sizing: border-box;
+}
+.stack-placeholder {
+  color: #a7b3c2;
+  font-size: 14px;
+}
+.stack-caret {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8a98a7;
+  font-size: 11px;
+  transition: transform 0.15s;
+}
+.stack-caret.open {
+  transform: translateY(-50%) rotate(180deg);
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eef4ff;
+  color: var(--blue-dark);
+  border: 1px solid #d3e3fd;
+  border-radius: 999px;
+  padding: 4px 6px 4px 11px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.chip-remove {
+  border: 0;
+  background: transparent;
+  color: var(--blue-dark);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 50%;
+}
+.chip-remove:hover {
+  background: #d3e3fd;
+}
+.stack-dropdown {
+  margin-top: 6px;
+  border: 1px solid #dce4ec;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 14px 30px rgba(15, 31, 48, 0.1);
+  overflow: hidden;
+}
+.stack-search {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 11px 12px;
+  outline: 0;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+.stack-options {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 6px;
+}
+.stack-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 9px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.stack-option:hover {
+  background: #f5f8fc;
+}
+.stack-option input {
+  margin: 0;
+}
+.stack-empty {
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #8a98a7;
+}
 .form-actions {
   display: flex;
   justify-content: flex-end;
