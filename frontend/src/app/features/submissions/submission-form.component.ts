@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, HostListener, ElementRef } from "@angular/core";
 import { FormsModule, NgForm } from "@angular/forms";
 import { ActivatedRoute, Router, RouterLink } from "@angular/router";
 import { HttpErrorResponse } from "@angular/common/http";
@@ -47,13 +47,20 @@ import { Criteria, SubmissionRequest } from "../../models/project.models";
                 [(ngModel)]="form.projectTitle"
                 #title="ngModel"
                 required
-                maxlength="200"
+                maxlength="50"
                 placeholder="Enter the project title"
               />
 
-              @if (title.invalid && title.touched) {
-                <small class="field-error"> Project title is required. </small>
-              }
+              <div class="field-footer">
+                @if (title.invalid && title.touched) {
+                  <small class="field-error"> Project title is required. </small>
+                } @else {
+                  <span></span>
+                }
+                <small class="char-counter" [class.limit-near]="form.projectTitle.length >= 45">
+                  {{ form.projectTitle.length }}/50
+                </small>
+              </div>
             </div>
 
             <div class="field">
@@ -64,6 +71,7 @@ import { Criteria, SubmissionRequest } from "../../models/project.models";
                 [(ngModel)]="form.problemStatement"
                 #problem="ngModel"
                 required
+                maxlength="500"
                 rows="6"
                 placeholder="What problem are you solving, for whom, and why does it matter?"
               >
@@ -73,11 +81,18 @@ import { Criteria, SubmissionRequest } from "../../models/project.models";
                 Describe the user, current problem and expected impact.
               </small>
 
-              @if (problem.invalid && problem.touched) {
-                <small class="field-error">
-                  Problem statement is required.
+              <div class="field-footer">
+                @if (problem.invalid && problem.touched) {
+                  <small class="field-error">
+                    Problem statement is required.
+                  </small>
+                } @else {
+                  <span></span>
+                }
+                <small class="char-counter" [class.limit-near]="form.problemStatement.length >= 450">
+                  {{ form.problemStatement.length }}/500
                 </small>
-              }
+              </div>
             </div>
 
             <div class="field">
@@ -88,30 +103,73 @@ import { Criteria, SubmissionRequest } from "../../models/project.models";
                 [(ngModel)]="form.objectives"
                 #objectives="ngModel"
                 required
+                maxlength="500"
                 rows="5"
                 placeholder="List the measurable outcomes you want to achieve."
               >
               </textarea>
 
-              @if (objectives.invalid && objectives.touched) {
-                <small class="field-error"> Objectives are required. </small>
-              }
+              <div class="field-footer">
+                @if (objectives.invalid && objectives.touched) {
+                  <small class="field-error"> Objectives are required. </small>
+                } @else {
+                  <span></span>
+                }
+                <small class="char-counter" [class.limit-near]="form.objectives.length >= 450">
+                  {{ form.objectives.length }}/500
+                </small>
+              </div>
             </div>
 
-            <div class="field">
+            <div class="field" #stackWrapper>
               <label> Technology stack <span>*</span> </label>
 
-              <input
-                name="technologyStack"
-                [(ngModel)]="form.technologyStack"
-                #stack="ngModel"
-                required
-                placeholder="Java, Spring Boot, Angular, MySQL, AI API"
-              />
+              <div class="stack-select" (click)="toggleStackDropdown($event)">
+                @if (selectedStack.length === 0) {
+                  <span class="stack-placeholder">Select technologies…</span>
+                }
+                @for (item of selectedStack; track item) {
+                  <span class="chip">
+                    {{ item }}
+                    <button type="button" class="chip-remove" (click)="removeStackItem(item, $event)">×</button>
+                  </span>
+                }
+                <span class="stack-caret" [class.open]="stackDropdownOpen">▾</span>
+              </div>
 
-              @if (stack.invalid && stack.touched) {
+              @if (stackDropdownOpen) {
+                <div class="stack-dropdown" (click)="$event.stopPropagation()">
+                  <input
+                    class="stack-search"
+                    type="text"
+                    placeholder="Search or type a custom stack and press Enter"
+                    [(ngModel)]="stackSearch"
+                    name="stackSearch"
+                    (keydown.enter)="addCustomStack($event)"
+                  />
+                  <div class="stack-options">
+                    @for (option of filteredStackOptions(); track option) {
+                      <label class="stack-option">
+                        <input
+                          type="checkbox"
+                          [checked]="isStackSelected(option)"
+                          (change)="toggleStackItem(option)"
+                        />
+                        {{ option }}
+                      </label>
+                    }
+                    @if (filteredStackOptions().length === 0) {
+                      <div class="stack-empty">
+                        No matches. Press Enter to add "{{ stackSearch }}" as a custom entry.
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              @if (selectedStack.length === 0 && stackTouched) {
                 <small class="field-error">
-                  Technology stack is required.
+                  Select at least one technology.
                 </small>
               }
             </div>
@@ -198,11 +256,90 @@ export class SubmissionFormComponent implements OnInit {
     documentationLink: "",
   };
 
+  readonly stackOptionList: string[] = [
+    "Java", "Spring Boot", "Angular", "React", "Vue.js", "TypeScript",
+    "JavaScript", "Node.js", "Express", "Python", "Django", "Flask",
+    "MySQL", "PostgreSQL", "MongoDB", "Redis", "REST API", "GraphQL",
+    "AI API", "TensorFlow", "PyTorch", "Docker", "Kubernetes",
+    "AWS", "Azure", "GCP", "Firebase", "Kafka", ".NET", "C#", "Kotlin", "Swift",
+  ];
+
+  selectedStack: string[] = [];
+  stackDropdownOpen = false;
+  stackSearch = "";
+  stackTouched = false;
+
   constructor(
     private readonly api: ApiService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
+    private readonly elementRef: ElementRef,
   ) {}
+
+  @HostListener("document:click", ["$event"])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.stackDropdownOpen && !this.elementRef.nativeElement.contains(event.target)) {
+      this.stackDropdownOpen = false;
+      this.stackTouched = true;
+    }
+  }
+
+  toggleStackDropdown(event: Event): void {
+    event.stopPropagation();
+    this.stackDropdownOpen = !this.stackDropdownOpen;
+    if (!this.stackDropdownOpen) {
+      this.stackTouched = true;
+    }
+  }
+
+  filteredStackOptions(): string[] {
+    const query = this.stackSearch.trim().toLowerCase();
+    if (!query) {
+      return this.stackOptionList;
+    }
+    return this.stackOptionList.filter((option) =>
+      option.toLowerCase().includes(query),
+    );
+  }
+
+  isStackSelected(option: string): boolean {
+    return this.selectedStack.includes(option);
+  }
+
+  toggleStackItem(option: string): void {
+    if (this.isStackSelected(option)) {
+      this.selectedStack = this.selectedStack.filter((item) => item !== option);
+    } else {
+      this.selectedStack = [...this.selectedStack, option];
+    }
+    this.syncStackToForm();
+  }
+
+  removeStackItem(item: string, event: Event): void {
+    event.stopPropagation();
+    this.selectedStack = this.selectedStack.filter((entry) => entry !== item);
+    this.syncStackToForm();
+  }
+
+  addCustomStack(event: Event): void {
+    event.preventDefault();
+    const value = this.stackSearch.trim();
+    if (value && !this.selectedStack.includes(value)) {
+      this.selectedStack = [...this.selectedStack, value];
+      this.syncStackToForm();
+    }
+    this.stackSearch = "";
+  }
+
+  private syncStackToForm(): void {
+    this.form.technologyStack = this.selectedStack.join(", ");
+  }
+
+  private parseStackFromForm(value: string): void {
+    this.selectedStack = value
+      ? value.split(",").map((item) => item.trim()).filter(Boolean)
+      : [];
+  }
 
   ngOnInit(): void {
     this.loadCriteria();
@@ -244,6 +381,7 @@ export class SubmissionFormComponent implements OnInit {
           technologyStack: submission.technologyStack,
           documentationLink: submission.documentationLink || "",
         };
+        this.parseStackFromForm(submission.technologyStack);
       },
 
       error: (error) => {
@@ -257,7 +395,9 @@ export class SubmissionFormComponent implements OnInit {
     this.success = "";
     this.error = "";
 
-    if (formRef.invalid) {
+    this.stackTouched = true;
+
+    if (formRef.invalid || this.selectedStack.length === 0) {
       formRef.form.markAllAsTouched();
       this.error = "Please complete all required fields.";
       return;
