@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgIf } from '@angular/common';
 import { Router } from '@angular/router';
+import { finalize, timeout, catchError, throwError } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
 
 @Component({
@@ -78,13 +79,20 @@ export class LoginComponent {
     this.loading = true;
     this.error = '';
 
-    this.auth.login(this.email.trim(), this.password).subscribe({
+    this.auth.login(this.email.trim(), this.password).pipe(
+      timeout(20000),
+      catchError(err => {
+        if (err?.name === 'TimeoutError') {
+          return throwError(() => ({ error: { message: 'The server is taking too long to respond. Please try again.' } }));
+        }
+        return throwError(() => err);
+      }),
+      finalize(() => { this.loading = false; })
+    ).subscribe({
       next: response => {
-        this.loading = false;
         this.router.navigateByUrl('/dashboard');
       },
       error: error => {
-        this.loading = false;
         this.error = this.apiError(error, 'Unable to sign in. Check your credentials.');
       }
     });
