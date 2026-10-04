@@ -78,8 +78,10 @@ public class SubmissionService {
 		decisions.save(new Decision(s, trainer, r.status(), r.comments()));
 		s.setStatus(SubmissionStatus.REVIEWED);
 		submissions.save(s);
-		notifications.notify(s.getPodLead(), "Trainer decision for '" + s.getProjectTitle() + "': "
-				+ label(r.status()) + (r.comments() == null ? "" : " — " + r.comments()));
+		String decisionMessage = "Trainer decision for '" + s.getProjectTitle() + "': "
+				+ label(r.status()) + (r.comments() == null ? "" : " — " + r.comments());
+		notifications.notify(s.getPodLead(), decisionMessage);
+		notifyPodMembers(s, decisionMessage);
 		return get(id, trainer);
 	}
 
@@ -122,14 +124,32 @@ public class SubmissionService {
 				r.missingCriteria(), r.overlapLevel(), r.overlapFlag(), r.analysisSummary()));
 		if (r.alignmentScore() >= threshold) {
 			s.setStatus(SubmissionStatus.PENDING_TRAINER_REVIEW);
-			notifications.notify(s.getPodLead(), "Your project idea '" + s.getProjectTitle() + "' qualified for"
-					+ " trainer review with an alignment score of " + r.alignmentScore() + "%.");
+			String leadMessage = "Your project idea '" + s.getProjectTitle() + "' qualified for"
+					+ " trainer review with an alignment score of " + r.alignmentScore() + "%.";
+			notifications.notify(s.getPodLead(), leadMessage);
+			notifyPodMembers(s, leadMessage);
+			notifyTrainers("New submission '" + s.getProjectTitle() + "' from " + s.getPodLead().getPodName()
+					+ " is ready for your review (alignment score " + r.alignmentScore() + "%).");
 		} else {
 			s.setStatus(SubmissionStatus.NEEDS_REVISION);
-			notifications.notify(s.getPodLead(), "Your project idea '" + s.getProjectTitle() + "' needs improvement. "
-					+ "Alignment score: " + r.alignmentScore() + "%. Please revise and reupload.");
+			String leadMessage = "Your project idea '" + s.getProjectTitle() + "' needs improvement. "
+					+ "Alignment score: " + r.alignmentScore() + "%. Please revise and reupload.";
+			notifications.notify(s.getPodLead(), leadMessage);
+			notifyPodMembers(s, leadMessage);
 		}
 		submissions.save(s);
+	}
+
+	private void notifyPodMembers(Submission s, String message) {
+		for (User member : users.findAllByRoleAndPodName(Role.POD_MEMBER, s.getPodLead().getPodName())) {
+			notifications.notify(member, message);
+		}
+	}
+
+	private void notifyTrainers(String message) {
+		for (User trainer : users.findAllByRole(Role.TRAINER)) {
+			notifications.notify(trainer, message);
+		}
 	}
 
 	private Submission owned(Long id, User lead) {
